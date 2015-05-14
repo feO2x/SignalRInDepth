@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace SignalRWpfClient
@@ -17,7 +18,7 @@ namespace SignalRWpfClient
         private HubConnection _hubConnection;
         private IHubProxy _hubProxy;
         private int _numberOfLogMessages = 300;
-        private string _message;
+        private string _message = "Type your message here";
         private const string StartConnectionText = "Start Connection";
         private const string StopConnectionText = "Stop Connection";
         private const string SendMessageText = "Send Message";
@@ -57,8 +58,9 @@ namespace SignalRWpfClient
             {
                 await _hubConnection.Start();
                 _startOrStopConnectionCommand.Name = StopConnectionText;
+                CreateLogMessage("You successfully connected to " + _serviceUrl);
             }
-            catch (Exception ex)
+            catch (HttpRequestException ex)
             {
                 CreateLogMessage(string.Format("The hub connection could not be established ({0})",
                                                ex.GetType().FullName),
@@ -98,6 +100,7 @@ namespace SignalRWpfClient
             try
             {
                 await _hubProxy.Invoke("SendMessage", _message);
+                CreateLogMessage("You successfully sent: " + _message);
             }
             catch (Exception ex)
             {

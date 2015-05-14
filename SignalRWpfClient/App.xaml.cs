@@ -1,17 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Configuration;
 using System.Windows;
 
 namespace SignalRWpfClient
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
+    // ReSharper disable once RedundantExtendsListEntry
     public partial class App : Application
     {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+
+            var signalRUrl = ConfigurationManager.AppSettings["SignalRUrl"];
+            var hubName = ConfigurationManager.AppSettings["HubName"];
+
+            MainWindow = new MainWindow { DataContext = new MainWindowViewModel(signalRUrl, hubName) };
+            MainWindow.Show();
+        }
     }
 }
