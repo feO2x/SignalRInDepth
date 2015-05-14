@@ -5,6 +5,11 @@ namespace SignalRWpfClient.SampleData
 {
     public sealed class NamedCommandStub : INamedCommand
     {
+        public NamedCommandStub()
+        {
+            CanExecute = true;
+        }
+        
         public bool CanExecute { get; set; }
 
         bool ICommand.CanExecute(object parameter)

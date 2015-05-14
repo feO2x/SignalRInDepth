@@ -87,6 +87,7 @@ namespace SignalRWpfClient
             _hubConnection = null;
             _hubProxy = null;
             _startOrStopConnectionCommand.Name = StartConnectionText;
+            CreateLogMessage("You successfully disconnected");
         }
 
         private async void SendMessage()

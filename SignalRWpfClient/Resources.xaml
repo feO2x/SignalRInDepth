@@ -7,14 +7,26 @@
         <Setter Property="Template" Value="{DynamicResource ButtonTemplate}" />
         <Setter Property="Padding" Value="30,10" />
     </Style>
+    <Color x:Key="EmphasizeBackgroundColor">#FFC3C3C3</Color>
+    <Color x:Key="ClickBackgroundColor">#FF646363</Color>
     <ControlTemplate x:Key="ButtonTemplate" TargetType="{x:Type Button}">
         <Border x:Name="border" BorderThickness="{TemplateBinding BorderThickness}"
-                BorderBrush="{TemplateBinding BorderBrush}" Background="White">
+                BorderBrush="{TemplateBinding BorderBrush}" Background="White" RenderTransformOrigin="0.5,0.5">
+        	<Border.RenderTransform>
+        		<TransformGroup>
+        			<ScaleTransform/>
+        			<SkewTransform/>
+        			<RotateTransform/>
+        			<TranslateTransform/>
+        		</TransformGroup>
+        	</Border.RenderTransform>
             <VisualStateManager.VisualStateGroups>
                 <VisualStateGroup x:Name="CommonStates">
                     <VisualStateGroup.Transitions>
                         <VisualTransition GeneratedDuration="0:0:0.3" />
-                        <VisualTransition GeneratedDuration="0:0:0.1" To="Pressed" />
+                        <VisualTransition GeneratedDuration="0:0:0.2" To="Disabled"/>
+                        <VisualTransition GeneratedDuration="0:0:0.1" To="Pressed"/>
+                        <VisualTransition From="Pressed" GeneratedDuration="0:0:0.1"/>
                     </VisualStateGroup.Transitions>
                     <VisualState x:Name="Normal" />
                     <VisualState x:Name="MouseOver">
@@ -22,7 +34,7 @@
                             <ColorAnimationUsingKeyFrames
                                 Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)"
                                 Storyboard.TargetName="border">
-                                <EasingColorKeyFrame KeyTime="0" Value="#FFC3C3C3" />
+                                <EasingColorKeyFrame KeyTime="0" Value="{StaticResource EmphasizeBackgroundColor}" />
                             </ColorAnimationUsingKeyFrames>
                         </Storyboard>
                     </VisualState>
@@ -31,8 +43,14 @@
                             <ColorAnimationUsingKeyFrames
                                 Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)"
                                 Storyboard.TargetName="border">
-                                <EasingColorKeyFrame KeyTime="0" Value="#FF707070" />
+                                <EasingColorKeyFrame KeyTime="0" Value="{StaticResource EmphasizeBackgroundColor}" />
                             </ColorAnimationUsingKeyFrames>
+                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)" Storyboard.TargetName="border">
+                            	<EasingDoubleKeyFrame KeyTime="0" Value="0.95"/>
+                            </DoubleAnimationUsingKeyFrames>
+                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)" Storyboard.TargetName="border">
+                            	<EasingDoubleKeyFrame KeyTime="0" Value="0.95"/>
+                            </DoubleAnimationUsingKeyFrames>
                         </Storyboard>
                     </VisualState>
                     <VisualState x:Name="Disabled">
@@ -40,11 +58,11 @@
                             <ColorAnimationUsingKeyFrames
                                 Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)"
                                 Storyboard.TargetName="border">
-                                <EasingColorKeyFrame KeyTime="0" Value="#FFD6D6D6" />
+                                <EasingColorKeyFrame KeyTime="0" Value="{StaticResource EmphasizeBackgroundColor}" />
                             </ColorAnimationUsingKeyFrames>
                             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)"
                                                            Storyboard.TargetName="contentPresenter">
-                                <EasingDoubleKeyFrame KeyTime="0" Value="0.745" />
+                                <EasingDoubleKeyFrame KeyTime="0" Value="0.2" />
                             </DoubleAnimationUsingKeyFrames>
                         </Storyboard>
                     </VisualState>
@@ -63,12 +81,12 @@
         <Setter Property="Margin" Value="23,20,0,20" />
         <Setter Property="Foreground" Value="White" />
     </Style>
-    
+
     <Style x:Key="ListBoxStyle" TargetType="{x:Type ListBox}">
         <Setter Property="ItemContainerStyle" Value="{DynamicResource ListBoxItemStyle}" />
         <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Visible" />
     </Style>
-    
+
     <Style x:Key="ListBoxItemStyle" TargetType="{x:Type ListBoxItem}">
         <Setter Property="Template" Value="{DynamicResource ListBoxItemTemplate}" />
         <Setter Property="Margin" Value="0,3" />
@@ -81,8 +99,8 @@
             </Border.Background>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="{TemplateBinding Padding}">
                 <TextBlock Text="{Binding OccuredAt, Mode=OneTime, StringFormat=\{0:HH:mm:ss\}}" />
-                <TextBlock Text="{Binding Message, Mode=OneTime}" 
-                           TextTrimming="CharacterEllipsis" Margin="40 0 0 0"/>
+                <TextBlock Text="{Binding Message, Mode=OneTime}"
+                           TextTrimming="CharacterEllipsis" Margin="40 0 0 0" />
             </StackPanel>
         </Border>
     </ControlTemplate>
