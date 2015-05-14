@@ -14,8 +14,8 @@ namespace SignalRWpfClient.SampleData
                                                              new LogMessage("Normal Log Message", new DateTime(2015, 5, 14, 12, 49, 30))
                                                          };
 
-        private readonly NamedCommandStub _startOrStopConnectectionCommandStub = new NamedCommandStub();
-        private readonly NamedCommandStub _sendMessageCommandStub = new NamedCommandStub();
+        private readonly NamedCommandStub _startOrStopConnectectionCommandStub = new NamedCommandStub { Name = "Start Connection" };
+        private readonly NamedCommandStub _sendMessageCommandStub = new NamedCommandStub { Name = "Send Message" };
 
         public IReadOnlyList<LogMessage> LogMessages
         {
