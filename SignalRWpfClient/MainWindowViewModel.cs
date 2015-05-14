@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SignalRWpfClient
@@ -10,6 +11,7 @@ namespace SignalRWpfClient
     {
         private readonly string _serviceUrl;
         private readonly string _hubName;
+        private readonly SynchronizationContext _synchronizationContext;
         private readonly ObservableCollection<LogMessage> _logMessages = new ObservableCollection<LogMessage>();
         private readonly RelayCommand _startOrStopConnectionCommand;
         private bool _canCommandsExecute = true;
@@ -22,13 +24,15 @@ namespace SignalRWpfClient
         private const string StopConnectionText = "Stop Connection";
         private const string SendMessageText = "Send Message";
 
-        public MainWindowViewModel(string serviceUrl, string hubName)
+        public MainWindowViewModel(string serviceUrl, string hubName, SynchronizationContext synchronizationContext)
         {
             if (serviceUrl == null) throw new ArgumentNullException("serviceUrl");
             if (hubName == null) throw new ArgumentNullException("hubName");
+            if (synchronizationContext == null) throw new ArgumentNullException("synchronizationContext");
 
             _serviceUrl = serviceUrl;
             _hubName = hubName;
+            _synchronizationContext = synchronizationContext;
 
             Func<bool> canCommandExecute = () => _canCommandsExecute;
             _startOrStopConnectionCommand = new RelayCommand(StartOrStopConnection,
@@ -51,6 +55,9 @@ namespace SignalRWpfClient
         {
             _hubConnection = new HubConnection(_serviceUrl);
             _hubProxy = _hubConnection.CreateHubProxy(_hubName);
+            _hubConnection.StateChanged += OnHubConnectionStateChanged;
+            _hubConnection.Closed += OnHubConnectionClosed;
+            _hubConnection.ConnectionSlow += OnHubConnectionSlow;
 
             ChangeCanCommandsExecute();
             try
@@ -73,6 +80,30 @@ namespace SignalRWpfClient
             }
         }
 
+        private void OnHubConnectionSlow()
+        {
+            _synchronizationContext.Post(_ => CreateLogMessage("Hub reports that the connection is slow", SeverityLevel.Warning), null);
+        }
+
+        private void OnHubConnectionClosed()
+        {
+            _synchronizationContext.Post(_ =>
+                                         {
+                                             CreateLogMessage("Hub connection was closed", SeverityLevel.Warning);
+                                             if (_hubConnection != null)
+                                                 ReleaseConnection();
+                                         }, null);
+        }
+
+        private void OnHubConnectionStateChanged(StateChange stateChange)
+        {
+            _synchronizationContext.Post(_ => CreateLogMessage(string.Format("Hub connection state changed from {0} to {1}",
+                                                                             stateChange.OldState,
+                                                                             stateChange.NewState),
+                                                               SeverityLevel.Warning),
+                                         null);
+        }
+
         private void ChangeCanCommandsExecute()
         {
             _canCommandsExecute = !_canCommandsExecute;
@@ -82,11 +113,16 @@ namespace SignalRWpfClient
 
         private void StopConnection()
         {
+            ReleaseConnection();
+            CreateLogMessage("You successfully disconnected");
+        }
+
+        private void ReleaseConnection()
+        {
             _hubConnection.Stop();
             _hubConnection = null;
             _hubProxy = null;
             _startOrStopConnectionCommand.Name = StartConnectionText;
-            CreateLogMessage("You successfully disconnected");
         }
 
         private async void SendMessage()

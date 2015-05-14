@@ -1,4 +1,5 @@
 ﻿using System.Configuration;
+using System.Threading;
 using System.Windows;
 
 namespace SignalRWpfClient
@@ -13,7 +14,7 @@ namespace SignalRWpfClient
             var signalRUrl = ConfigurationManager.AppSettings["SignalRUrl"];
             var hubName = ConfigurationManager.AppSettings["HubName"];
 
-            MainWindow = new MainWindow { DataContext = new MainWindowViewModel(signalRUrl, hubName) };
+            MainWindow = new MainWindow { DataContext = new MainWindowViewModel(signalRUrl, hubName, SynchronizationContext.Current) };
             MainWindow.Show();
         }
     }
