@@ -60,7 +60,7 @@ namespace SignalRWpfClient
                 _startOrStopConnectionCommand.Name = StopConnectionText;
                 CreateLogMessage("You successfully connected to " + _serviceUrl);
             }
-            catch (HttpRequestException ex)
+            catch (Exception ex)
             {
                 CreateLogMessage(string.Format("The hub connection could not be established ({0})",
                                                ex.GetType().FullName),

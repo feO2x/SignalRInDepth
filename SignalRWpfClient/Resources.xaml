@@ -93,7 +93,36 @@
         <Setter Property="Padding" Value="27,8,4,8" />
     </Style>
     <ControlTemplate x:Key="ListBoxItemTemplate" TargetType="{x:Type ListBoxItem}">
+    	<ControlTemplate.Resources>
+    		<Storyboard x:Key="FadeIn">
+    			<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="Border">
+    				<EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+    				<EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="0"/>
+    				<EasingDoubleKeyFrame KeyTime="0:0:0.4" Value="1"/>
+    			</DoubleAnimationUsingKeyFrames>
+    			<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.LayoutTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)" Storyboard.TargetName="Border">
+    				<EasingDoubleKeyFrame KeyTime="0" Value="0">
+    					<EasingDoubleKeyFrame.EasingFunction>
+    						<CubicEase EasingMode="EaseOut"/>
+    					</EasingDoubleKeyFrame.EasingFunction>
+    				</EasingDoubleKeyFrame>
+    				<EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="1">
+    					<EasingDoubleKeyFrame.EasingFunction>
+    						<CubicEase EasingMode="EaseOut"/>
+    					</EasingDoubleKeyFrame.EasingFunction>
+    				</EasingDoubleKeyFrame>
+    			</DoubleAnimationUsingKeyFrames>
+    		</Storyboard>
+    	</ControlTemplate.Resources>
         <Border x:Name="Border">
+        	<Border.LayoutTransform>
+        		<TransformGroup>
+        			<ScaleTransform/>
+        			<SkewTransform/>
+        			<RotateTransform/>
+        			<TranslateTransform/>
+        		</TransformGroup>
+        	</Border.LayoutTransform>
             <Border.Background>
                 <SolidColorBrush Color="{Binding Level, Converter={StaticResource SeverityLevelToColorConverter}}" />
             </Border.Background>
@@ -103,5 +132,10 @@
                            TextTrimming="CharacterEllipsis" Margin="40 0 0 0" />
             </StackPanel>
         </Border>
+    	<ControlTemplate.Triggers>
+    		<EventTrigger RoutedEvent="FrameworkElement.Loaded">
+    			<BeginStoryboard x:Name="FadeIn_BeginStoryboard" Storyboard="{StaticResource FadeIn}"/>
+    		</EventTrigger>
+    	</ControlTemplate.Triggers>
     </ControlTemplate>
 </ResourceDictionary>
