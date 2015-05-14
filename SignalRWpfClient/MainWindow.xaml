@@ -1,0 +1,19 @@
+﻿<Window x:Class="SignalRWpfClient.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:sd="clr-namespace:SignalRWpfClient.SampleData"
+        mc:Ignorable="d"
+        Title="SignalR WPF Client" Height="768" Width="1366"
+        WindowStartupLocation="CenterScreen">
+    <d:Window.DataContext>
+        <sd:MainWindowViewModelSampleData />
+    </d:Window.DataContext>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+    </Grid>
+</Window>
