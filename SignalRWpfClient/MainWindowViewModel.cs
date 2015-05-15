@@ -18,6 +18,7 @@ namespace SignalRWpfClient
         private readonly RelayCommand _sendMessageCommand;
         private HubConnection _hubConnection;
         private IHubProxy _hubProxy;
+        private IDisposable _receiveMessageHandlerDisposable;
         private int _numberOfLogMessages = 300;
         private string _message = "Type your message here";
         private const string StartConnectionText = "Start Connection";
@@ -55,6 +56,7 @@ namespace SignalRWpfClient
         {
             _hubConnection = new HubConnection(_serviceUrl);
             _hubProxy = _hubConnection.CreateHubProxy(_hubName);
+            _receiveMessageHandlerDisposable = _hubProxy.On<string>("ReceiveMessage", ReceiveMessage);
             _hubConnection.StateChanged += OnHubConnectionStateChanged;
             _hubConnection.Closed += OnHubConnectionClosed;
             _hubConnection.ConnectionSlow += OnHubConnectionSlow;
@@ -80,6 +82,11 @@ namespace SignalRWpfClient
             }
         }
 
+        private void ReceiveMessage(string message)
+        {
+            _synchronizationContext.Post(_ => CreateLogMessage("Received " + message), null);
+        }
+
         private void OnHubConnectionSlow()
         {
             _synchronizationContext.Post(_ => CreateLogMessage("Hub reports that the connection is slow", SeverityLevel.Warning), null);
@@ -92,7 +99,8 @@ namespace SignalRWpfClient
                                              CreateLogMessage("Hub connection was closed", SeverityLevel.Warning);
                                              if (_hubConnection != null)
                                                  ReleaseConnection();
-                                         }, null);
+                                         },
+                                         null);
         }
 
         private void OnHubConnectionStateChanged(StateChange stateChange)
@@ -122,6 +130,8 @@ namespace SignalRWpfClient
             _hubConnection.Stop();
             _hubConnection = null;
             _hubProxy = null;
+            _receiveMessageHandlerDisposable.Dispose();
+            _receiveMessageHandlerDisposable = null;
             _startOrStopConnectionCommand.Name = StartConnectionText;
         }
 
