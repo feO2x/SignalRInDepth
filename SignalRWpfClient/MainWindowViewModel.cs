@@ -10,29 +10,24 @@ namespace SignalRWpfClient
     public sealed class MainWindowViewModel : NotifyingObject, IMainWindowViewModel
     {
         private readonly string _serviceUrl;
-        private readonly string _hubName;
         private readonly SynchronizationContext _synchronizationContext;
         private readonly ObservableCollection<LogMessage> _logMessages = new ObservableCollection<LogMessage>();
         private readonly RelayCommand _startOrStopConnectionCommand;
         private bool _canCommandsExecute = true;
         private readonly RelayCommand _sendMessageCommand;
-        private HubConnection _hubConnection;
-        private IHubProxy _hubProxy;
-        private IDisposable _receiveMessageHandlerDisposable;
+        private Connection _persistentConnection;
         private int _numberOfLogMessages = 300;
         private string _message = "Type your message here";
         private const string StartConnectionText = "Start Connection";
         private const string StopConnectionText = "Stop Connection";
         private const string SendMessageText = "Send Message";
 
-        public MainWindowViewModel(string serviceUrl, string hubName, SynchronizationContext synchronizationContext)
+        public MainWindowViewModel(string serviceUrl, SynchronizationContext synchronizationContext)
         {
             if (serviceUrl == null) throw new ArgumentNullException("serviceUrl");
-            if (hubName == null) throw new ArgumentNullException("hubName");
             if (synchronizationContext == null) throw new ArgumentNullException("synchronizationContext");
 
             _serviceUrl = serviceUrl;
-            _hubName = hubName;
             _synchronizationContext = synchronizationContext;
 
             Func<bool> canCommandExecute = () => _canCommandsExecute;
@@ -46,7 +41,7 @@ namespace SignalRWpfClient
 
         private async void StartOrStopConnection()
         {
-            if (_hubConnection == null)
+            if (_persistentConnection == null)
                 await StartConnection();
             else
                 StopConnection();
@@ -54,27 +49,25 @@ namespace SignalRWpfClient
 
         private async Task StartConnection()
         {
-            _hubConnection = new HubConnection(_serviceUrl);
-            _hubProxy = _hubConnection.CreateHubProxy(_hubName);
-            _receiveMessageHandlerDisposable = _hubProxy.On<string>("ReceiveMessage", ReceiveMessage);
-            _hubConnection.StateChanged += OnHubConnectionStateChanged;
-            _hubConnection.Closed += OnHubConnectionClosed;
-            _hubConnection.ConnectionSlow += OnHubConnectionSlow;
+            _persistentConnection = new Connection(_serviceUrl);
+            _persistentConnection.Received += ReceiveMessage;
+            _persistentConnection.StateChanged += OnHubConnectionStateChanged;
+            _persistentConnection.Closed += OnHubConnectionClosed;
+            _persistentConnection.ConnectionSlow += OnHubConnectionSlow;
 
             ChangeCanCommandsExecute();
             try
             {
-                await _hubConnection.Start();
+                await _persistentConnection.Start();
                 _startOrStopConnectionCommand.Name = StopConnectionText;
                 CreateLogMessage("You successfully connected to " + _serviceUrl);
             }
             catch (Exception ex)
             {
-                CreateLogMessage(string.Format("The hub connection could not be established ({0})",
+                CreateLogMessage(string.Format("The persistent connection could not be established ({0})",
                                                ex.GetType().FullName),
                                  SeverityLevel.Error);
-                _hubConnection = null;
-                _hubProxy = null;
+                _persistentConnection = null;
             }
             finally
             {
@@ -89,15 +82,15 @@ namespace SignalRWpfClient
 
         private void OnHubConnectionSlow()
         {
-            _synchronizationContext.Post(_ => CreateLogMessage("Hub reports that the connection is slow", SeverityLevel.Warning), null);
+            _synchronizationContext.Post(_ => CreateLogMessage("Persistent connection says it is slow.", SeverityLevel.Warning), null);
         }
 
         private void OnHubConnectionClosed()
         {
             _synchronizationContext.Post(_ =>
                                          {
-                                             CreateLogMessage("Hub connection was closed", SeverityLevel.Warning);
-                                             if (_hubConnection != null)
+                                             CreateLogMessage("Persistent connection was closed", SeverityLevel.Warning);
+                                             if (_persistentConnection != null)
                                                  ReleaseConnection();
                                          },
                                          null);
@@ -105,7 +98,7 @@ namespace SignalRWpfClient
 
         private void OnHubConnectionStateChanged(StateChange stateChange)
         {
-            _synchronizationContext.Post(_ => CreateLogMessage(string.Format("Hub connection state changed from {0} to {1}",
+            _synchronizationContext.Post(_ => CreateLogMessage(string.Format("Persistent connection state changed from {0} to {1}",
                                                                              stateChange.OldState,
                                                                              stateChange.NewState),
                                                                SeverityLevel.Warning),
@@ -127,25 +120,23 @@ namespace SignalRWpfClient
 
         private void ReleaseConnection()
         {
-            _hubConnection.Stop();
-            _hubConnection = null;
-            _hubProxy = null;
-            _receiveMessageHandlerDisposable.Dispose();
-            _receiveMessageHandlerDisposable = null;
+            _persistentConnection.Stop();
+            _persistentConnection.Received -= ReceiveMessage;
+            _persistentConnection = null;
             _startOrStopConnectionCommand.Name = StartConnectionText;
         }
 
         private async void SendMessage()
         {
-            if (_hubProxy == null)
+            if (_persistentConnection == null)
             {
-                CreateLogMessage("You cannot send a message because the hub connection is not initialized", SeverityLevel.Warning);
+                CreateLogMessage("You cannot send a message because the persistent connection is not initialized", SeverityLevel.Warning);
                 return;
             }
 
             try
             {
-                await _hubProxy.Invoke("SendMessage", _message);
+                await _persistentConnection.Send(_message);
                 CreateLogMessage("You successfully sent: " + _message);
             }
             catch (Exception ex)

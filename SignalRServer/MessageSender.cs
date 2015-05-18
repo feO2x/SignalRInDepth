@@ -7,7 +7,7 @@ namespace SignalRServer
     public sealed class MessageSender
     {
         private bool _isRunning;
-        private IHubContext _sampleHubContext;
+        private IPersistentConnectionContext _persistentConnectionContext;
 
         public void StartOrStop()
         {
@@ -22,8 +22,8 @@ namespace SignalRServer
 
         private void Start()
         {
-            if (_sampleHubContext == null)
-                _sampleHubContext = GlobalHost.ConnectionManager.GetHubContext<SampleHub>();
+            if (_persistentConnectionContext == null)
+                _persistentConnectionContext = GlobalHost.ConnectionManager.GetConnectionContext<SignalRConnectionEndPoint>();
 
             _isRunning = true;
 
@@ -34,7 +34,7 @@ namespace SignalRServer
         {
             while (_isRunning)
             {
-                _sampleHubContext.Clients.All.ReceiveMessage("Message from server");
+                await _persistentConnectionContext.Connection.Broadcast("Message from server");
                 await Task.Delay(1000);
             }
         }

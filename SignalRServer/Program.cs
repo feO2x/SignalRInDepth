@@ -2,6 +2,7 @@
 using Owin;
 using System;
 using System.Configuration;
+using Microsoft.AspNet.SignalR;
 
 namespace SignalRServer
 {
@@ -42,14 +43,15 @@ namespace SignalRServer
                     Console.WriteLine();
                     goto StartService;
                 }
-                if(keyInfo.Key == ConsoleKey.Escape)
+                if (keyInfo.Key == ConsoleKey.Escape)
                     break;
             }
         }
 
         private static void Configure(IAppBuilder appBuilder)
         {
-            appBuilder.MapSignalR();
+            // appBuilder.MapSignalR();
+            appBuilder.MapSignalR("/persistentConnectionEndPoint", typeof (SignalRConnectionEndPoint), new ConnectionConfiguration());
         }
     }
 }

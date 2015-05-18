@@ -11,10 +11,9 @@ namespace SignalRWpfClient
         {
             base.OnStartup(e);
 
-            var signalRUrl = ConfigurationManager.AppSettings["SignalRUrl"];
-            var hubName = ConfigurationManager.AppSettings["HubName"];
+            var persistentConnectionUrl = ConfigurationManager.AppSettings["persistentConnectionUrl"];
 
-            MainWindow = new MainWindow { DataContext = new MainWindowViewModel(signalRUrl, hubName, SynchronizationContext.Current) };
+            MainWindow = new MainWindow { DataContext = new MainWindowViewModel(persistentConnectionUrl, SynchronizationContext.Current) };
             MainWindow.Show();
         }
     }
