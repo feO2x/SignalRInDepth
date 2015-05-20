@@ -58,6 +58,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="..\SignalRServer\AppConfig.cs">
+      <Link>AppConfig.cs</Link>
+    </Compile>
     <Compile Include="IMainWindowViewModel.cs" />
     <Compile Include="INamedCommand.cs" />
     <Compile Include="IRaisePropertyChanged.cs" />

@@ -10,15 +10,13 @@ namespace SignalRWpfClient
     public sealed class MainWindowViewModel : NotifyingObject, IMainWindowViewModel
     {
         private readonly string _serviceUrl;
-        private readonly string _hubName;
         private readonly SynchronizationContext _synchronizationContext;
         private readonly ObservableCollection<LogMessage> _logMessages = new ObservableCollection<LogMessage>();
         private readonly RelayCommand _startOrStopConnectionCommand;
         private bool _canCommandsExecute = true;
         private readonly RelayCommand _sendMessageCommand;
-        private HubConnection _hubConnection;
-        private IHubProxy _hubProxy;
-        private IDisposable _receiveMessageHandlerDisposable;
+        private readonly HubConnection _hubConnection;
+        private readonly IHubProxy _hubProxy;
         private int _numberOfLogMessages = 300;
         private string _message = "Type your message here";
         private const string StartConnectionText = "Start Connection";
@@ -32,7 +30,6 @@ namespace SignalRWpfClient
             if (synchronizationContext == null) throw new ArgumentNullException("synchronizationContext");
 
             _serviceUrl = serviceUrl;
-            _hubName = hubName;
             _synchronizationContext = synchronizationContext;
 
             Func<bool> canCommandExecute = () => _canCommandsExecute;
@@ -42,11 +39,18 @@ namespace SignalRWpfClient
             _sendMessageCommand = new RelayCommand(SendMessage,
                                                    canCommandExecute,
                                                    SendMessageText);
+
+            _hubConnection = new HubConnection(serviceUrl);
+            _hubConnection.StateChanged += OnHubConnectionStateChanged;
+            _hubConnection.Closed += OnHubConnectionClosed;
+            _hubConnection.ConnectionSlow += OnHubConnectionSlow;
+            _hubProxy = _hubConnection.CreateHubProxy(hubName);
+            _hubProxy.On<string>("ReceiveMessage", ReceiveMessage);
         }
 
         private async void StartOrStopConnection()
         {
-            if (_hubConnection == null)
+            if (_hubConnection.State == ConnectionState.Disconnected)
                 await StartConnection();
             else
                 StopConnection();
@@ -54,13 +58,6 @@ namespace SignalRWpfClient
 
         private async Task StartConnection()
         {
-            _hubConnection = new HubConnection(_serviceUrl);
-            _hubProxy = _hubConnection.CreateHubProxy(_hubName);
-            _receiveMessageHandlerDisposable = _hubProxy.On<string>("ReceiveMessage", ReceiveMessage);
-            _hubConnection.StateChanged += OnHubConnectionStateChanged;
-            _hubConnection.Closed += OnHubConnectionClosed;
-            _hubConnection.ConnectionSlow += OnHubConnectionSlow;
-
             ChangeCanCommandsExecute();
             try
             {
@@ -73,8 +70,6 @@ namespace SignalRWpfClient
                 CreateLogMessage(string.Format("The hub connection could not be established ({0})",
                                                ex.GetType().FullName),
                                  SeverityLevel.Error);
-                _hubConnection = null;
-                _hubProxy = null;
             }
             finally
             {
@@ -97,8 +92,7 @@ namespace SignalRWpfClient
             _synchronizationContext.Post(_ =>
                                          {
                                              CreateLogMessage("Hub connection was closed", SeverityLevel.Warning);
-                                             if (_hubConnection != null)
-                                                 ReleaseConnection();
+                                             _startOrStopConnectionCommand.Name = StartConnectionText;
                                          },
                                          null);
         }
@@ -121,19 +115,10 @@ namespace SignalRWpfClient
 
         private void StopConnection()
         {
-            ReleaseConnection();
+            _hubConnection.Stop();
             CreateLogMessage("You successfully disconnected");
         }
 
-        private void ReleaseConnection()
-        {
-            _hubConnection.Stop();
-            _hubConnection = null;
-            _hubProxy = null;
-            _receiveMessageHandlerDisposable.Dispose();
-            _receiveMessageHandlerDisposable = null;
-            _startOrStopConnectionCommand.Name = StartConnectionText;
-        }
 
         private async void SendMessage()
         {

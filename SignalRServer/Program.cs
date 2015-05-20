@@ -1,7 +1,7 @@
 ﻿using Microsoft.Owin.Hosting;
 using Owin;
+using SignalRInDepth;
 using System;
-using System.Configuration;
 
 namespace SignalRServer
 {
@@ -9,8 +9,7 @@ namespace SignalRServer
     {
         private static void Main()
         {
-            var targetPort = Convert.ToInt32(ConfigurationManager.AppSettings["Port"]);
-            var baseAddress = string.Format("http://{0}:{1}", Environment.MachineName, targetPort);
+            var baseAddress = AppConfig.GetSignalRServerUrl();
             var messageSender = new MessageSender();
 
             StartService:
