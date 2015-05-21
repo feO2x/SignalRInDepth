@@ -32,7 +32,7 @@ namespace SignalRWpfClient
             _serviceUrl = serviceUrl;
             _synchronizationContext = synchronizationContext;
 
-            Func<bool> canCommandExecute = () => _canCommandsExecute;
+            Func<bool> canCommandExecute = () => CanCommandsExecute;
             _startOrStopConnectionCommand = new RelayCommand(StartOrStopConnection,
                                                              canCommandExecute,
                                                              StartConnectionText);
@@ -48,15 +48,15 @@ namespace SignalRWpfClient
             _hubProxy.On<string>("ReceiveMessage", ReceiveMessage);
         }
 
-        private async void StartOrStopConnection()
+        private void StartOrStopConnection()
         {
             if (_hubConnection.State == ConnectionState.Disconnected)
-                await StartConnection();
+                StartConnection();
             else
                 StopConnection();
         }
 
-        private async Task StartConnection()
+        private async void StartConnection()
         {
             ChangeCanCommandsExecute();
             try
@@ -108,15 +108,17 @@ namespace SignalRWpfClient
 
         private void ChangeCanCommandsExecute()
         {
-            _canCommandsExecute = !_canCommandsExecute;
+            CanCommandsExecute = !CanCommandsExecute;
             _startOrStopConnectionCommand.RaiseCanExecuteChanged();
             _sendMessageCommand.RaiseCanExecuteChanged();
         }
 
-        private void StopConnection()
+        private async void StopConnection()
         {
-            _hubConnection.Stop();
+            ChangeCanCommandsExecute();
+            await Task.Factory.StartNew(() => _hubConnection.Stop());
             CreateLogMessage("You successfully disconnected");
+            ChangeCanCommandsExecute();
         }
 
 
@@ -178,6 +180,12 @@ namespace SignalRWpfClient
         {
             get { return _message; }
             set { this.SetValueIfDifferent(ref _message, value); }
+        }
+
+        public bool CanCommandsExecute
+        {
+            get { return _canCommandsExecute; }
+            set { this.SetValueIfDifferent(ref _canCommandsExecute, value); }
         }
     }
 }

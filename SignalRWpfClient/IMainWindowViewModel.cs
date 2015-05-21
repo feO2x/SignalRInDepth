@@ -8,5 +8,6 @@ namespace SignalRWpfClient
         INamedCommand StartOrStopConnectionCommand { get; }
         INamedCommand SendMessageCommand { get; }
         string Message { get; set; }
+        bool CanCommandsExecute { get; set; }
     }
 }

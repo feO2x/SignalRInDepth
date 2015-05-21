@@ -28,7 +28,7 @@
         <Border Grid.Row="2" Padding="20" Background="DarkSlateGray">
             <StackPanel   Orientation="Horizontal">
                 <Button Content="{Binding StartOrStopConnectionCommand.Name}" Style="{DynamicResource ButtonStyle}" Command="{Binding StartOrStopConnectionCommand}" />
-                <TextBox x:Name="TextBox" Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}" Width="311" VerticalContentAlignment="Center" Margin="60,0,0,0" Padding="10,0,0,0" KeyUp="SendMessageOnTextBoxEnter"/>
+                <TextBox x:Name="TextBox" Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}" Width="311" VerticalContentAlignment="Center" Margin="60,0,0,0" Padding="10,0,0,0" KeyUp="SendMessageOnTextBoxEnter" IsEnabled="{Binding CanCommandsExecute}"/>
                 <Button x:Name="SendMessageButton" Content="{Binding SendMessageCommand.Name}" Style="{DynamicResource ButtonStyle}" Margin="10,0,0,0" Command="{Binding SendMessageCommand}" />
             </StackPanel>
         </Border>
