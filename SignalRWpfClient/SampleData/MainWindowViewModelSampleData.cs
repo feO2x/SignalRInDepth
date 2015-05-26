@@ -33,5 +33,6 @@ namespace SignalRWpfClient.SampleData
         }
 
         public string Message { get; set; }
+        public bool CanCommandsExecute { get; set; }
     }
 }
